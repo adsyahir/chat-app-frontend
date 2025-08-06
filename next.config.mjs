@@ -1,4 +1,8 @@
 /** @type {import('next').NextConfig} */
-const nextConfig = {};
-
-export default nextConfig;
+const nextConfig = {
+    publicRuntimeConfig: {
+      backendUrl: process.env.BACKEND_URL,
+    },
+  };
+  
+  export default nextConfig;
