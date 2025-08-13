@@ -1,6 +1,6 @@
 "use client";
 
-import { useChatStore } from "@/lib/chatStore";
+import { useChatStore } from "@/lib/stores";
 import { SidebarInset, SidebarTrigger } from "@/components/ui/sidebar";
 import { Separator } from "@/components/ui/separator";
 import { Textarea } from "@/components/ui/textarea";
@@ -22,129 +22,131 @@ export default function Chat({ user }) {
   const hasHydrated = chatStoreResult?.store?._hasHydrated ?? false;
   const userId = chatStoreResult?.store?.userId ?? null;
   const userName = chatStoreResult?.store?.userName ?? null;
+  console.log("Chat store result:", chatStoreResult.selectedContact);
+
 
   // Setup socket connection effect
-  useEffect(() => {
-    if (!userId) return;
+  // useEffect(() => {
+  //   if (!userId) return;
 
-    console.log("🔌 Connecting socket for user:", userId);
+  //   console.log("🔌 Connecting socket for user:", userId);
 
-    const newSocket = io("http://localhost:8000", {
-      query: { userId },
-      forceNew: true,
-    });
+  //   const newSocket = io(process.env.NEXT_PUBLIC_BACKEND_URL, {
+  //     query: { userId },
+  //     forceNew: true,
+  //   });
 
-    newSocket.on("connect", () => {
-      console.log("✅ Socket connected:", newSocket.id);
-    });
+  //   newSocket.on("connect", () => {
+  //     console.log("✅ Socket connected:", newSocket.id);
+  //   });
 
-    newSocket.on("disconnect", () => {
-      console.log("❌ Socket disconnected");
-    });
+  //   newSocket.on("disconnect", () => {
+  //     console.log("❌ Socket disconnected");
+  //   });
 
-    newSocket.on("getOnlineUsers", (userIds) => {
-      console.log("👥 Online users:", userIds);
-      setOnlineUsers(userIds);
-    });
+  //   newSocket.on("getOnlineUsers", (userIds) => {
+  //     console.log("👥 Online users:", userIds);
+  //     setOnlineUsers(userIds);
+  //   });
 
-    newSocket.on("error", (error) => {
-      console.error("🚨 Socket error:", error);
-    });
+  //   newSocket.on("error", (error) => {
+  //     console.error("🚨 Socket error:", error);
+  //   });
 
-    setSocket(newSocket);
-    socketRef.current = newSocket;
+  //   setSocket(newSocket);
+  //   socketRef.current = newSocket;
 
-    return () => {
-      console.log("🧹 Cleaning up socket connection");
-      if (socketRef.current) {
-        socketRef.current.disconnect();
-        socketRef.current = null;
-      }
-      setSocket(null);
-    };
-  }, [userId]);
+  //   return () => {
+  //     console.log("🧹 Cleaning up socket connection");
+  //     if (socketRef.current) {
+  //       socketRef.current.disconnect();
+  //       socketRef.current = null;
+  //     }
+  //     setSocket(null);
+  //   };
+  // }, [userId]);
 
   // Early returns after hooks (safe)
-  if (chatStoreResult.isLoading || !chatStoreResult.authReady) {
-    return (
-      <SidebarInset className="flex items-center justify-center h-screen">
-        <div className="text-center">
-          <Loader2 className="w-8 h-8 animate-spin mx-auto mb-4" />
-          <p className="text-gray-600 dark:text-gray-400">Loading chat...</p>
-          <p className="text-xs text-gray-500 mt-2">
-            Auth ready: {chatStoreResult.authReady ? "✅" : "❌"} | Loading:{" "}
-            {chatStoreResult.isLoading ? "✅" : "❌"}
-          </p>
-        </div>
-      </SidebarInset>
-    );
-  }
+  // if (chatStoreResult.isLoading || !chatStoreResult.authReady) {
+  //   return (
+  //     <SidebarInset className="flex items-center justify-center h-screen">
+  //       <div className="text-center">
+  //         <Loader2 className="w-8 h-8 animate-spin mx-auto mb-4" />
+  //         <p className="text-gray-600 dark:text-gray-400">Loading chat...</p>
+  //         <p className="text-xs text-gray-500 mt-2">
+  //           Auth ready: {chatStoreResult.authReady ? "✅" : "❌"} | Loading:{" "}
+  //           {chatStoreResult.isLoading ? "✅" : "❌"}
+  //         </p>
+  //       </div>
+  //     </SidebarInset>
+  //   );
+  // }
 
-  if (chatStoreResult.needsAuth) {
-    return (
-      <SidebarInset className="flex items-center justify-center h-screen">
-        <div className="text-center">
-          <MessageCircle className="w-12 h-12 mx-auto mb-4 text-gray-400" />
-          <p className="text-gray-600 dark:text-gray-400 mb-2">Authentication Required</p>
-          <p className="text-sm text-gray-500">Please log in to access the chat.</p>
-        </div>
-      </SidebarInset>
-    );
-  }
+  // if (chatStoreResult.needsAuth) {
+  //   return (
+  //     <SidebarInset className="flex items-center justify-center h-screen">
+  //       <div className="text-center">
+  //         <MessageCircle className="w-12 h-12 mx-auto mb-4 text-gray-400" />
+  //         <p className="text-gray-600 dark:text-gray-400 mb-2">Authentication Required</p>
+  //         <p className="text-sm text-gray-500">Please log in to access the chat.</p>
+  //       </div>
+  //     </SidebarInset>
+  //   );
+  // }
 
-  if (!chatStoreResult.isReady || !chatStoreResult.store) {
-    return (
-      <SidebarInset className="flex items-center justify-center h-screen">
-        <div className="text-center">
-          <Loader2 className="w-8 h-8 animate-spin mx-auto mb-4" />
-          <p className="text-gray-600 dark:text-gray-400">Initializing chat store...</p>
-        </div>
-      </SidebarInset>
-    );
-  }
+  // if (!chatStoreResult.isReady || !chatStoreResult.store) {
+  //   return (
+  //     <SidebarInset className="flex items-center justify-center h-screen">
+  //       <div className="text-center">
+  //         <Loader2 className="w-8 h-8 animate-spin mx-auto mb-4" />
+  //         <p className="text-gray-600 dark:text-gray-400">Initializing chat store...</p>
+  //       </div>
+  //     </SidebarInset>
+  //   );
+  // }
 
-  if (!hasHydrated) {
-    return (
-      <SidebarInset className="flex items-center justify-center h-screen">
-        <div className="text-center">
-          <Loader2 className="w-8 h-8 animate-spin mx-auto mb-4" />
-          <p className="text-gray-600 dark:text-gray-400">Loading your chat data...</p>
-        </div>
-      </SidebarInset>
-    );
-  }
+  // if (!hasHydrated) {
+  //   return (
+  //     <SidebarInset className="flex items-center justify-center h-screen">
+  //       <div className="text-center">
+  //         <Loader2 className="w-8 h-8 animate-spin mx-auto mb-4" />
+  //         <p className="text-gray-600 dark:text-gray-400">Loading your chat data...</p>
+  //       </div>
+  //     </SidebarInset>
+  //   );
+  // }
 
-  if (!contact) {
-    return (
-      <SidebarInset className="flex flex-col h-screen">
-        <header className="bg-background sticky top-0 z-10 flex items-center gap-2 border-b p-4">
-          <SidebarTrigger className="-ml-1" />
-          <Separator
-            orientation="vertical"
-            className="mr-2 data-[orientation=vertical]:h-4"
-          />
-          <h1 className="text-lg font-semibold">Chat</h1>
-        </header>
+  // if (!contact) {
+  //   return (
+  //     <SidebarInset className="flex flex-col h-screen">
+  //       <header className="bg-background sticky top-0 z-10 flex items-center gap-2 border-b p-4">
+  //         <SidebarTrigger className="-ml-1" />
+  //         <Separator
+  //           orientation="vertical"
+  //           className="mr-2 data-[orientation=vertical]:h-4"
+  //         />
+  //         <h1 className="text-lg font-semibold">Chat</h1>
+  //       </header>
 
-        <div className="flex-1 flex items-center justify-center">
-          <div className="text-center">
-            <MessageCircle className="w-16 h-16 mx-auto mb-4 text-gray-400" />
-            <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-2">
-              No chat selected
-            </h2>
-            <p className="text-gray-600 dark:text-gray-400">
-              Select a contact from the sidebar to start chatting
-            </p>
-            <div className="mt-4 text-sm text-gray-500">
-              <p>User: {userName || userId}</p>
-              <p>Online users: {onlineUsers.length}</p>
-              <p>Socket: {socket?.connected ? "✅ Connected" : "❌ Disconnected"}</p>
-            </div>
-          </div>
-        </div>
-      </SidebarInset>
-    );
-  }
+  //       <div className="flex-1 flex items-center justify-center">
+  //         <div className="text-center">
+  //           <MessageCircle className="w-16 h-16 mx-auto mb-4 text-gray-400" />
+  //           <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-2">
+  //             No chat selected
+  //           </h2>
+  //           <p className="text-gray-600 dark:text-gray-400">
+  //             Select a contact from the sidebar to start chatting
+  //           </p>
+  //           <div className="mt-4 text-sm text-gray-500">
+  //             <p>User: {userName || userId}</p>
+  //             <p>Online users: {onlineUsers.length}</p>
+  //             <p>Socket: {socket?.connected ? "✅ Connected" : "❌ Disconnected"}</p>
+  //           </div>
+  //         </div>
+  //       </div>
+  //     </SidebarInset>
+  //   );
+  // }
 
   const handleSendMessage = (e) => {
     e.preventDefault();
@@ -171,7 +173,7 @@ export default function Chat({ user }) {
         />
         <div className="flex-1">
           <h1 className="text-lg font-semibold">
-            {contact?.username ?? "Unknown User"}
+            {chatStoreResult.selectedContact?.username ?? "Unknown User"}
           </h1>
           <div className="flex items-center gap-4 text-sm text-gray-600 dark:text-gray-400">
             <span>

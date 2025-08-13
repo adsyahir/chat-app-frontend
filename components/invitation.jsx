@@ -25,7 +25,7 @@ import {
 import { Label } from "@/components/ui/label";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
-import { authenticatedClientFetch } from "@/lib/clientFetch.js";
+import { authenticatedClientFetch } from "@/lib/api";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 

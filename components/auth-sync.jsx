@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect } from 'react';
-import { useAuthStore } from '@/lib/authStore';
+import { useAuthStore } from '@/lib/stores';
 
 // Client component to sync server auth state with client store
 export default function AuthSync({ IsAuthenticated, user}) {
@@ -14,11 +14,9 @@ export default function AuthSync({ IsAuthenticated, user}) {
         if (setIsAuthenticated, user) {
           setUser(user);
           setIsAuthenticated(true);
-          console.log("Current user:", user);
         } else {
           setUser(null);
           setIsAuthenticated(false);
-          console.log("Current user:", user);
 
         }
       } catch (error) {

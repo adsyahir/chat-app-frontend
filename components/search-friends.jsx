@@ -52,7 +52,7 @@ export default function SearchFriends() {
         ? `?search=${encodeURIComponent(debouncedSearch)}`
         : "";
 
-      const response = await fetch(`http://localhost:8000/api/users${query}`, {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/users${query}`, {
         credentials: "include",
       });
 
@@ -72,7 +72,7 @@ export default function SearchFriends() {
 
   const addFriend = async (toUserId) => {
     try {
-      const response = await fetch("http://localhost:8000/api/friends/add", {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/friends/add`, {
         method: "POST",
         credentials: "include",
         headers: {
@@ -94,7 +94,7 @@ export default function SearchFriends() {
 
   const cancelFriendRequest = async (toUserId) => {
     try {
-      const response = await fetch("http://localhost:8000/api/friends/delete", {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/friends/delete`, {
         method: "DELETE",
         credentials: "include",
         headers: {

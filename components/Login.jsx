@@ -16,8 +16,8 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { useRouter } from "next/navigation";
 import { AlertCircleIcon, CheckCircle2Icon, PopcornIcon } from "lucide-react";
 import Link from "next/link";
-import { useAuthStore } from "@/lib/authStore";
-import { io } from "socket.io-client";
+import { useAuthStore } from "@/lib/stores";
+import { authAPI, socketAPI } from "@/lib/api";
 
 export default function Login() {
   const [email, setEmail] = useState("");
@@ -30,22 +30,7 @@ export default function Login() {
     e.preventDefault();
   
     try {
-      const response = await fetch("http://localhost:8000/api/auth/login", {
-        method: "POST",
-        credentials: "include", // ✅ Send session cookie
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ email, password }),
-      });
-  
-      if (!response.ok) {
-        const errorData = await response.json();
-        setError(errorData);
-        return;
-      }
-      
-      const data = await response.json();
+      const data = await authAPI.login(email, password);
       
       // ❌ WRONG: useAuthStore.setState().setUser(data.user);
       // ✅ CORRECT: Use the store's action directly
@@ -53,20 +38,14 @@ export default function Login() {
       setIsAuthenticated(true);
       setIsLoading(false);
  
-      console.log("Current user:", currentUser);
-      connectSocket();
+      socketAPI.connect();
       router.refresh(); 
     } catch (err) {
-      console.error("Login error:", err.message);
+      setError(err);
+      console.error("Login error:", err);
     }
   };
-  const connectSocket = () => {
-    const socket = io("http://localhost:8000");
-    socket.on("connect", () => {
-      console.log("Connected to the server");
-    });
-    
-  };
+
   return (
     <Card className="w-full max-w-sm">
       <CardHeader>

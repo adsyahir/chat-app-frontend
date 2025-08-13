@@ -1,9 +1,9 @@
-import { authenticatedServerFetch } from "@/lib/api";
+import { authenticatedServerFetch } from "@/app/lib/server-api.js";
 import Contacts from "@/components/contact";
 const getListOfContacts = async () => {
   try {
     const users = await authenticatedServerFetch(
-      `http://localhost:8000/api/friends/get-friends`
+      `/api/friends/get-friends`
     );
     return users;
   } catch (error) {

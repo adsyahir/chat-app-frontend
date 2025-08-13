@@ -227,7 +227,6 @@ function SidebarTrigger({
   ...props
 }) {
   const { toggleSidebar } = useSidebar()
-  console.log(toggleSidebar)  
   return (
     <Button
       data-sidebar="trigger"

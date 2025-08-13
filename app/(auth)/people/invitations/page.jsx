@@ -1,10 +1,10 @@
 import Invitation from "@/components/invitation";
-import { authenticatedServerFetch } from "@/lib/api";
+import { authenticatedServerFetch } from "@/app/lib/server-api.js";
 
 const getPendingFriendRequests = async () => {
     try {
       const users = await authenticatedServerFetch(
-        `http://localhost:8000/api/friends/pending-requests`
+        `/api/friends/pending-requests`
       );
       console.log("Pending friend requests:", users);
       return users;
