@@ -16,7 +16,7 @@ export default function Chat({ user }) {
   const socketRef = useRef(null);
 
   const chatStoreResult = useChatStore();
-
+  // console.log("Online users :", chatStoreResult);
   // Destructure from store defensively
   const contact = chatStoreResult?.store?.selectedContact ?? null;
   const hasHydrated = chatStoreResult?.store?._hasHydrated ?? false;

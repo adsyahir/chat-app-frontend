@@ -17,6 +17,7 @@ import { useRouter } from "next/navigation";
 import { AlertCircleIcon, CheckCircle2Icon, PopcornIcon } from "lucide-react";
 import Link from "next/link";
 import { useAuthStore } from "@/lib/stores";
+import { useChatStore } from "@/lib/stores/chatStore";
 import { authAPI, socketAPI } from "@/lib/api";
 
 export default function Login() {
@@ -24,6 +25,7 @@ export default function Login() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const { setUser, setIsAuthenticated, setIsLoading } = useAuthStore(); // ✅ Hooks at top level
+  const { onlineUsers } = useChatStore();
 
   const router = useRouter(); // Initialize router
   const handleLogin = async (e) => {
@@ -38,7 +40,7 @@ export default function Login() {
       setIsAuthenticated(true);
       setIsLoading(false);
  
-      socketAPI.connect();
+      socketAPI.connect(data.user.id);
       router.refresh(); 
     } catch (err) {
       setError(err);
