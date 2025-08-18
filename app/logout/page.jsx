@@ -1,6 +1,6 @@
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
-// import { clearAllUserStores } from "@/lib/stores";
+import { clearAllUserStores } from "@/lib/stores";
 export default async function LogoutPage() {
   const cookieStore = await cookies(); // ✅ await here
   const sessionCookie = cookieStore.get("connect.sid");
@@ -13,7 +13,7 @@ export default async function LogoutPage() {
       },
     });
   }
-  // clearAllUserStores();
+  clearAllUserStores();
 
   redirect("/login");
 }

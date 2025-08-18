@@ -5,24 +5,78 @@ import { SidebarInset, SidebarTrigger } from "@/components/ui/sidebar";
 import { Separator } from "@/components/ui/separator";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, use } from "react";
 import { io } from "socket.io-client";
 import { Loader2, MessageCircle } from "lucide-react";
+import { chatAPI, socketAPI } from "@/lib/api";
 
 export default function Chat({ user }) {
   const [message, setMessage] = useState("");
   const [socket, setSocket] = useState(null);
   const [onlineUsers, setOnlineUsers] = useState([]);
+  const [chatMessages, setChatMessages] = useState([]);
   const socketRef = useRef(null);
-
+ 
   const chatStoreResult = useChatStore();
   // console.log("Online users :", chatStoreResult);
   // Destructure from store defensively
-  const contact = chatStoreResult?.store?.selectedContact ?? null;
-  const hasHydrated = chatStoreResult?.store?._hasHydrated ?? false;
-  const userId = chatStoreResult?.store?.userId ?? null;
+  const contact = chatStoreResult?.selectedContact ?? null;
+  const hasHydrated = chatStoreResult?._hasHydrated ?? false;
+  const userId = chatStoreResult?.userId ?? null;
   const userName = chatStoreResult?.store?.userName ?? null;
-  console.log("Chat store result:", chatStoreResult.selectedContact);
+  console.log("Chat store result:", chatStoreResult?.selectedContact );
+
+  const sendMessage = async (receiverId) => {
+    try {
+      if (!receiverId || !message.trim()) {
+        console.warn("No receiver or empty message");
+        return;
+      }
+
+      const result = await chatAPI.sendMessage(receiverId, message);
+      console.log("Message sent successfully:", result);
+      setMessage(""); // Clear the message input after sending
+    } catch (error) {
+      console.error("Error sending message:", error);
+    }
+  };
+
+  useEffect(() => {
+    // console.log("Chat component mounted, userId:", chatStoreResult.store.selectedContact);
+    if(chatStoreResult?.selectedContact) {
+      getMessages(chatStoreResult.selectedContact.friendId);
+    } 
+  } , [chatStoreResult?.selectedContact,chatStoreResult?._hasHydrated]);
+
+  // Separate useEffect for socket setup - waits for socket to be ready
+  useEffect(() => {
+    if (chatStoreResult?._hasHydrated && userId) {
+      // Set up socket listener for new messages
+      getMessageViaSocket();
+    }
+  }, [chatStoreResult?._hasHydrated, userId]);
+
+  const getMessages = async (receiverId) => {
+    try {
+      const result = await chatAPI.getMessages(receiverId);
+      setChatMessages(result);
+      console.log("Fetched messages:", result);
+    } catch (error) {
+      console.error("Error fetching messages:", error);    
+    }
+  };
+
+  const getMessageViaSocket = () => {
+    try {
+      socketAPI.on("newMessage", (message) => {
+        console.log("New message received via socket:", message);
+        setChatMessages((prevMessages) => [...prevMessages, message]);
+      });
+    } catch (error) {
+      console.error("Error setting up socket listener:", error);
+    }
+  };
+
 
 
   // Setup socket connection effect
@@ -173,11 +227,12 @@ export default function Chat({ user }) {
         />
         <div className="flex-1">
           <h1 className="text-lg font-semibold">
-            {chatStoreResult.selectedContact?.username ?? "Unknown User"}
+            {chatStoreResult.selectedContact?.friendId ?? "Unknown User"}
           </h1>
           <div className="flex items-center gap-4 text-sm text-gray-600 dark:text-gray-400">
             <span>
-              Status: {onlineUsers.includes(contact?._id) ? "🟢 Online" : "⚪ Offline"}
+              Status:{" "}
+              {onlineUsers.includes(contact?._id) ? "🟢 Online" : "⚪ Offline"}
             </span>
             <span>
               Socket: {socket?.connected ? "🟢 Connected" : "🔴 Disconnected"}
@@ -187,7 +242,28 @@ export default function Chat({ user }) {
       </header>
 
       <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-muted/5">
-        {Array.from({ length: 10 }).map((_, i) => (
+        {chatMessages.length === 0 ? (
+          <div className="text-center text-gray-500">
+            <p className="text-sm">No messages yet. Start the conversation!</p>
+          </div>
+        ) : (
+          chatMessages.map((msg, i) => (
+            <div
+              key={i}
+              className={`max-w-xs px-4 py-2 rounded-lg ${
+                msg.senderId === userId
+                  ? "ml-auto bg-black text-white"
+                  : "mr-auto bg-white text-black border border-gray-300"
+              }`}
+            >
+              <p className="text-sm">{msg.text}</p>
+              <span className="text-xs opacity-70">
+                {msg.senderId === userId ? "You" : contact?.username || "User"}
+              </span>
+            </div>
+          ))
+        )}
+        {/* {Array.from({ length: 10 }).map((_, i) => (
           <div
             key={i}
             className={`max-w-xs px-4 py-2 rounded-lg ${
@@ -200,31 +276,22 @@ export default function Chat({ user }) {
               ? `You: Sample message ${i + 1}`
               : `${contact?.username ?? "User"}: Response ${i + 1}`}
           </div>
-        ))}
-
-        {!socket?.connected && (
-          <div className="text-center py-4">
-            <div className="inline-flex items-center gap-2 px-3 py-1 bg-yellow-100 dark:bg-yellow-900/20 text-yellow-800 dark:text-yellow-200 rounded-full text-sm">
-              <div className="w-2 h-2 bg-yellow-500 rounded-full animate-pulse"></div>
-              Connecting to chat server...
-            </div>
-          </div>
-        )}
+        ))} */}
       </div>
 
       <div className="border-t p-4 bg-background">
         <form onSubmit={handleSendMessage} className="flex items-center gap-2">
           <Textarea
-            placeholder={
-              socket?.connected
-                ? `Type a message to ${contact?.username}...`
-                : "Connecting to chat server..."
-            }
-            className="flex-1 resize-none"
+            // placeholder={
+            //   socket?.connected
+            //     ? `Type a message to ${contact?.username}...`
+            //     : "Connecting to chat server..."
+            // }
+            // className="flex-1 resize-none"
             rows={2}
             value={message}
             onChange={(e) => setMessage(e.target.value)}
-            disabled={!socket?.connected}
+            // disabled={!socket?.connected}
             onKeyDown={(e) => {
               if (e.key === "Enter" && !e.shiftKey) {
                 e.preventDefault();
@@ -235,23 +302,24 @@ export default function Chat({ user }) {
           <Button
             className="h-full"
             type="submit"
-            disabled={!message.trim() || !socket?.connected}
+            onClick={() => sendMessage(chatStoreResult.selectedContact?.friendId)}
           >
-            {!socket?.connected ? (
+            {/* {!socket?.connected ? (
               <Loader2 className="w-4 h-4 animate-spin" />
             ) : (
               "Send"
-            )}
+            )} */}
+            Send
           </Button>
         </form>
 
-        <div className="mt-2 text-xs text-gray-500 flex items-center justify-between">
+        {/* <div className="mt-2 text-xs text-gray-500 flex items-center justify-between">
           <span>User: {userName || userId}</span>
           <span>
             {socket?.connected ? "✅" : "❌"} Socket | {onlineUsers.length} online | To:{" "}
             {contact?.username}
           </span>
-        </div>
+        </div> */}
       </div>
     </SidebarInset>
   );
