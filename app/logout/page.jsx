@@ -1,19 +1,47 @@
-import { cookies } from "next/headers";
-import { redirect } from "next/navigation";
+"use client";
+
+import { useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { clearAllUserStores } from "@/lib/stores";
-export default async function LogoutPage() {
-  const cookieStore = await cookies(); // ✅ await here
-  const sessionCookie = cookieStore.get("connect.sid");
+import { socketAPI, authAPI } from "@/lib/api";
 
-  if (sessionCookie?.value) {
-    await fetch(`${process.env.BACKEND_URL}/api/auth/logout`, {
-      method: "POST",
-      headers: {
-        Cookie: `connect.sid=${sessionCookie.value}`, // ✅ manually forward cookie
-      },
-    });
-  }
-  clearAllUserStores();
+export default function LogoutPage() {
+  const router = useRouter();
 
-  redirect("/login");
+  useEffect(() => {
+    const handleLogout = async () => {
+      console.log("Starting logout process...");
+      
+      try {
+        // Use authAPI logout function
+        console.log("Calling authAPI.logout()...");
+         const response = await authAPI.logout();
+        if(!response) {
+          throw new Error("Logout failed");
+        }
+        console.log("Logout API successful");
+      } catch (error) {
+        console.error("Logout API error:", error);
+      }
+
+      // Disconnect socket and clear stores regardless of API result
+      console.log("Disconnecting socket and clearing stores...");
+      socketAPI.disconnect();
+      clearAllUserStores();
+
+      // Redirect to login
+      console.log("Redirecting to login...");
+      router.push("/login");
+    };
+
+    handleLogout();
+  }, [router]);
+
+  return (
+    <div className="flex items-center justify-center min-h-screen">
+      <div className="text-center">
+        <p className="text-lg">Logging out...</p>
+      </div>
+    </div>
+  );
 }

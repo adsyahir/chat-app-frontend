@@ -12,7 +12,8 @@ import { SidebarProvider } from "@/components/ui/sidebar";
 import AuthSync from "@/components/auth-sync";
 
 import { AppSidebar } from "@/components/app-sidebar";
-import Chat from "@/components/chat";
+import ChatWrapper from "@/components/chat-wrapper";
+import OnlineUsersSync from "@/components/online-users-sync";
 export default async function AuthLayout({ children }) {
   const headersList = await headers();
   const userHeader = headersList.get("x-user");
@@ -43,7 +44,8 @@ export default async function AuthLayout({ children }) {
     <SidebarProvider>
       <AppSidebar user={user}>{children}</AppSidebar>
       <AuthSync isAuthenticated={isAuthenticated} user={user} />
-      <Chat user={user} />
+      <OnlineUsersSync />
+      <ChatWrapper />
     </SidebarProvider>
   );
 }
