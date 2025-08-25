@@ -16,7 +16,7 @@ export default function Chat() {
   const chatStoreResult = useChatStore();
   const contact = chatStoreResult?.selectedContact ?? null;
   const userId = chatStoreResult?.userId ?? null;
-  const onlineUsers = chatStoreResult?.onlineUsers ?? [];
+  const onlineUsers = Array.isArray(chatStoreResult?.onlineUsers) ? chatStoreResult.onlineUsers : [];
   console.log("Online Users:", onlineUsers);
   const sendMessage = async (e) => {
     e?.preventDefault();
@@ -109,6 +109,7 @@ export default function Chat() {
               {onlineUsers && onlineUsers.includes(contact?.friendId)
                 ? "🟢 Online"
                 : "⚪ Offline"}
+              {chatStoreResult.socket.id}
             </span>
             <span>{onlineUsers.length} users online</span>
           </div>
