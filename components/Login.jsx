@@ -41,7 +41,7 @@ export default function Login() {
       setIsLoading(false);
  
       socketAPI.connect(data.user.id);
-      router.refresh(); 
+      router.push("/home");
     } catch (err) {
       setError(err);
       console.error("Login error:", err);
