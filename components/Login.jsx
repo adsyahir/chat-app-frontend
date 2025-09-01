@@ -14,7 +14,7 @@ import { Label } from "@/components/ui/label";
 import { useState } from "react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { useRouter } from "next/navigation";
-import { AlertCircleIcon, CheckCircle2Icon, PopcornIcon } from "lucide-react";
+import { AlertCircleIcon } from "lucide-react";
 import Link from "next/link";
 import { useAuthStore } from "@/lib/stores";
 import { useChatStore } from "@/lib/stores/chatStore";
@@ -24,18 +24,17 @@ export default function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
-  const { setUser, setIsAuthenticated, setIsLoading } = useAuthStore(); // ✅ Hooks at top level
+  const { setUser, setIsAuthenticated, setIsLoading } = useAuthStore();
   const { onlineUsers } = useChatStore();
 
-  const router = useRouter(); // Initialize router
+  const router = useRouter();
+  
   const handleLogin = async (e) => {
     e.preventDefault();
   
     try {
       const data = await authAPI.login(email, password);
       
-      // ❌ WRONG: useAuthStore.setState().setUser(data.user);
-      // ✅ CORRECT: Use the store's action directly
       setUser(data.user);
       setIsAuthenticated(true);
       setIsLoading(false);
@@ -44,7 +43,7 @@ export default function Login() {
       router.push("/home");
     } catch (err) {
       setError(err);
-      console.error("Login error:", err);
+      console.error("Login failed");
     }
   };
 
@@ -99,7 +98,7 @@ export default function Login() {
           {error && (
             <Alert variant="destructive" className="mt-5">
               <AlertCircleIcon />
-              <AlertTitle>Unsucessful login</AlertTitle>
+              <AlertTitle>Unsuccessful login</AlertTitle>
               <AlertDescription>{error.error}</AlertDescription>
             </Alert>
           )}
@@ -108,9 +107,6 @@ export default function Login() {
           <Button type="submit" className="w-full">
             Login
           </Button>
-          {/* <Button variant="outline" className="w-full">
-            Login with Google
-          </Button> */}
         </CardFooter>
       </form>
     </Card>

@@ -18,8 +18,9 @@ export async function middleware(req) {
 
   if (sessionCookie) {
     try {
-      // 🔒 Validate session with backend
-      const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/session`, {
+      // 🔒 Validate session with backend (use internal URL for server-side calls)
+      const backendUrl = process.env.INTERNAL_BACKEND_URL || process.env.NEXT_PUBLIC_BACKEND_URL;
+      const response = await fetch(`${backendUrl}/session`, {
         headers: {
           Cookie: `connect.sid=${sessionCookie.value}`,
         },
