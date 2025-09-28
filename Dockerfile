@@ -15,11 +15,11 @@ ARG INTERNAL_BACKEND_URL
 ENV NEXT_PUBLIC_BACKEND_URL=$NEXT_PUBLIC_BACKEND_URL
 ENV INTERNAL_BACKEND_URL=$INTERNAL_BACKEND_URL
 
-# Build the application
-RUN npm run build
+# Enable polling for file watching in containers
+ENV CHOKIDAR_USEPOLLING=true
 
 # Expose port
 EXPOSE 3000
 
-# Start the application
-CMD ["npm", "start"]
+# Start in development mode for live reload
+CMD ["npm", "run", "dev"]
