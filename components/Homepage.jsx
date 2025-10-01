@@ -13,7 +13,7 @@ export default function Homepage() {
           {/* Logo/Brand */}
           <div className="flex items-center space-x-2">
             <MessageCircle className="h-12 w-12 text-primary" />
-            <h1 className="text-4xl font-bold text-foreground">ChatApp</h1>
+            <h1 className="text-4xl font-bold text-foreground">ChatApp Test</h1>
           </div>
 
           {/* Tagline */}
