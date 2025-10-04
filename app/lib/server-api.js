@@ -13,7 +13,7 @@ export const authenticatedServerFetch = async (url, options = {}) => {
   }
 
   // Get backend host from environment variables
-  const backendHost = process.env.NEXT_PUBLIC_BACKEND_URL;
+  const backendHost = process.env.INTERNAL_BACKEND_URL;
   
   // Build full URL if it's a relative path
   const fullUrl = url.startsWith('http') ? url : `${backendHost}${url.startsWith('/') ? url : `/${url}`}`;
@@ -29,7 +29,7 @@ export const authenticatedServerFetch = async (url, options = {}) => {
   };
 
   const response = await fetch(fullUrl, defaultOptions);
-
+  console.log('Fetch response status:', response.status);
   if (!response.ok) {
     throw new Error(`HTTP error! status: ${response.status}`);
   }
