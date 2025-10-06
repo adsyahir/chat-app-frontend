@@ -7,6 +7,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { useState, useEffect, useRef } from "react";
 import { chatAPI, socketAPI } from "@/lib/api";
+import { userAPI } from "@/lib/api/user";
 
 export default function Chat() {
   const [message, setMessage] = useState("");
@@ -16,8 +17,10 @@ export default function Chat() {
   const chatStoreResult = useChatStore();
   const contact = chatStoreResult?.selectedContact ?? null;
   const userId = chatStoreResult?.userId ?? null;
-  const onlineUsers = Array.isArray(chatStoreResult?.onlineUsers) ? chatStoreResult.onlineUsers : [];
-  console.log("Online Users:", onlineUsers);
+  const onlineUsers = Array.isArray(chatStoreResult?.onlineUsers)
+    ? chatStoreResult.onlineUsers
+    : [];
+  // console.log("Online Users:", onlineUsers);
   const sendMessage = async (e) => {
     e?.preventDefault();
     if (!message.trim() || !contact?.friendId) return;
@@ -41,7 +44,7 @@ export default function Chat() {
   };
 
   useEffect(() => {
-    if (chatStoreResult?.selectedContact) {
+    if (chatStoreResult?.selectedContact?.friendId) {
       getMessages(chatStoreResult.selectedContact.friendId);
     }
   }, [chatStoreResult?.selectedContact, chatStoreResult?._hasHydrated]);
@@ -74,6 +77,19 @@ export default function Chat() {
     }
   };
 
+  const getUserById = async (id) => {
+    try {
+      const result = await userAPI.getUserById(id);
+      chatStoreResult.setSelectedContact({
+        ...result,
+        friendId: result._id,
+      });
+      getMessages(id);
+    } catch (error) {
+      console.error("Error fetching user data:", error);
+    }
+  };
+
   const getMessageViaSocket = () => {
     try {
       // Remove existing listener first to prevent duplicates
@@ -81,9 +97,14 @@ export default function Chat() {
 
       // Listen for new messages
       socketAPI.on("newMessage", (message) => {
-        console.log("New message received:", message);
         if (message.senderId !== userId) {
           setChatMessages((prevMessages) => [...prevMessages, message]);
+        }
+        if (
+          message.senderId &&
+          chatStoreResult?.selectedContact?._id !== message.senderId
+        ) {
+          getUserById(message.senderId);
         }
       });
     } catch (error) {
