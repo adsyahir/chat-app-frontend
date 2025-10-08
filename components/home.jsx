@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { use, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { Input } from "@/components/ui/input";
@@ -26,14 +26,16 @@ import {
   Users,
 } from "lucide-react";
 import { useChatStore, useAuthStore } from "@/lib/stores";
+import { friendsAPI } from "@/lib/api";
+import { set } from "zod";
 
 export default function HomePage() {
   const { user, userId, isAuthenticated, isLoading, _hasHydrated } =
     useAuthStore();
-
+  const [chattedFriends, setChattedFriends] = useState([]);
   // Always call useChatStore at the top level - this is crucial!
   const chatStore = useChatStore();
-
+  
   const getInitials = (username) => {
     return username
       .split(" ")
@@ -42,6 +44,60 @@ export default function HomePage() {
       .toUpperCase()
       .slice(0, 2);
   };
+
+  const displayExisitingChattedFriends = async () => {
+    try {
+      const result = await friendsAPI.getExistingChattedFriends();
+
+      // Early return if no result
+      if (!result) return;
+
+      // Build the final friends list in one operation
+      // const friends = chatStore?.selectedContact
+      //   ? (() => {
+      //       // Check if selected contact already exists in results
+      //       const contactExists = result.some(
+      //         (f) => f._id === chatStore.selectedContact.friendId
+      //       );
+      //       console.log('chatStore.selectedContact._id:', chatStore.selectedContact.friendId);
+      //       console.log('result:', result)
+
+      //       console.log("Contact exists:", contactExists);
+      //       // If exists, return results as-is; otherwise append selected contact
+      //       return contactExists
+      //         ? result
+      //         : [
+      //             ...result,
+      //             {
+      //               _id: chatStore.selectedContact._id,
+      //               username: chatStore.selectedContact.username,
+      //               email: chatStore.selectedContact.email,
+      //               avatar: chatStore.selectedContact.avatar,
+      //               createdAt: chatStore.selectedContact.createdAt,
+      //             },
+      //           ];
+      //     })()
+      //   : result;
+
+      // Single state update - better performance
+      setChattedFriends(result);
+    } catch (error) {
+      console.error("Error fetching chatted friends:", error);
+    }
+  };
+  useEffect(() => {
+    displayExisitingChattedFriends();
+    setFirstContactAfterMessage();
+  }, [chatStore?._hasHydrated, chatStore?.selectedContact]);
+
+  const setFirstContactAfterMessage = () => {
+    if (chattedFriends.length > 0 && !chatStore.selectedContact) {
+      chatStore.setSelectedContact({
+        ...chattedFriends[0],
+        friendId: chattedFriends[0]._id,
+      });
+    }
+  }
 
   const formatDate = (dateString) => {
     if (!dateString) return "";
@@ -90,51 +146,54 @@ export default function HomePage() {
         <SidebarGroup>
           <SidebarGroupContent className="px-2">
             <div className="space-y-2">
-              {isAuthenticated && chatStore && chatStore.selectedContact ? (
-                <div
-                  className="cursor-pointer group p-3 rounded-xl border border-gray-300 dark:border-gray-700 hover:border-gray-500 dark:hover:border-gray-500 hover:bg-gray-50 dark:hover:bg-gray-900 transition-all duration-200 hover:shadow-sm bg-white dark:bg-black"
-                  onClick={() => console.log("Selected contact clicked")}
-                >
-                  <div className="flex items-start justify-between gap-2 cursor-pointer">
-                    <div className="flex items-center gap-3 flex-1 min-w-0">
-                      <Avatar className="w-10 h-10 ring-2 ring-gray-300 dark:ring-gray-700 group-hover:ring-gray-500 dark:group-hover:ring-gray-500 transition-all duration-200 flex-shrink-0">
-                        <AvatarImage
-                          src={chatStore.selectedContact.avatar}
-                          alt={chatStore.selectedContact.username}
-                        />
-                        <AvatarFallback className="bg-black text-white dark:bg-white dark:text-black font-medium border border-gray-300 dark:border-gray-700">
-                          {getInitials(chatStore.selectedContact.username)}
-                        </AvatarFallback>
-                      </Avatar>
+              {isAuthenticated && chattedFriends.length > 0 ? (
+                chattedFriends.map((friend) => (
+                  <div
+                    key={friend._id}
+                    className="cursor-pointer group p-3 rounded-xl border border-gray-300 dark:border-gray-700 hover:border-gray-500 dark:hover:border-gray-500 hover:bg-gray-50 dark:hover:bg-gray-900  hover:shadow-sm bg-white dark:bg-black"
+                    onClick={() => chatStore.setSelectedContact({ ...friend, friendId: friend._id })}
+                  >
+                    <div className="flex items-start justify-between gap-2 cursor-pointer">
+                      <div className="flex items-center gap-3 flex-1 min-w-0">
+                        <Avatar className="w-10 h-10 ring-2 ring-gray-300 dark:ring-gray-700 group-hover:ring-gray-500 dark:group-hover:ring-gray-500 transition-all duration-200 flex-shrink-0">
+                          <AvatarImage
+                            src={friend.avatar}
+                            alt={friend.username}
+                          />
+                          <AvatarFallback className="bg-black text-white dark:bg-white dark:text-black font-medium border border-gray-300 dark:border-gray-700">
+                            {getInitials(friend.username)}
+                          </AvatarFallback>
+                        </Avatar>
 
-                      <div className="flex flex-col min-w-0 flex-1">
-                        <span className="font-medium text-black dark:text-white group-hover:text-gray-900 dark:group-hover:text-gray-100 transition-colors truncate">
-                          {chatStore.selectedContact.username}
-                        </span>
-                        {chatStore.selectedContact.email && (
-                          <span className="text-xs text-gray-600 dark:text-gray-400 truncate">
-                            {chatStore.selectedContact.email}
+                        <div className="flex flex-col min-w-0 flex-1">
+                          <span className="font-medium text-black dark:text-white group-hover:text-gray-900 dark:group-hover:text-gray-100 transition-colors truncate">
+                            {friend.username}
                           </span>
-                        )}
-                        {chatStore.selectedContact.createdAt && (
-                          <span className="text-xs text-gray-500 dark:text-gray-500">
-                            {formatDate(chatStore.selectedContact.createdAt)}
-                          </span>
-                        )}
+                          {/* {friend.email && (
+                            <span className="text-xs text-gray-600 dark:text-gray-400 truncate">
+                              {friend.email}
+                            </span>
+                          )} */}
+                          {friend.createdAt && (
+                            <span className="text-xs text-gray-500 dark:text-gray-500">
+                              {formatDate(friend.createdAt)}
+                            </span>
+                          )}
+                        </div>
                       </div>
                     </div>
                   </div>
-                </div>
+                ))
               ) : (
                 <div className="flex flex-col items-center justify-center py-12 px-4">
                   <div className="p-4 bg-gray-100 dark:bg-gray-900 rounded-full mb-4 border border-gray-300 dark:border-gray-700">
                     <Users className="w-8 h-8 text-gray-600 dark:text-gray-400" />
                   </div>
                   <h3 className="text-lg font-medium text-black dark:text-white mb-2">
-                    No contact selected
+                    No chatted friends yet
                   </h3>
                   <p className="text-sm text-gray-600 dark:text-gray-400 text-center max-w-sm">
-                    Select a contact from your contacts page to start chatting.
+                    Start a conversation with your contacts to see them here.
                   </p>
                 </div>
               )}

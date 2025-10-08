@@ -103,6 +103,7 @@ export default function Contacts({ contacts = [] }) {
   const handleMessage = (contact) => {
     // ✅ Check if chatStore is available before using it
     if (chatStore?.setSelectedContact) {
+      console.log('Handling message for contact:', contact);
       chatStore.setSelectedContact(contact);
       console.log('selectedContact is',chatStore?.selectedContact);
 

@@ -6,8 +6,7 @@ import { Separator } from "@/components/ui/separator";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { useState, useEffect, useRef } from "react";
-import { chatAPI, socketAPI } from "@/lib/api";
-import { userAPI } from "@/lib/api/user";
+import { chatAPI, socketAPI, userAPI, friendsAPI } from "@/lib/api";
 
 export default function Chat() {
   const [message, setMessage] = useState("");
@@ -89,6 +88,15 @@ export default function Chat() {
       console.error("Error fetching user data:", error);
     }
   };
+
+  const getExistingChattedFriends =  async () => {
+    try{
+      const result = await friendsAPI.getExistingChattedFriends();
+      return result;  
+    }catch(error){ 
+      console.error("Error fetching user data:", error);
+    }
+  }
 
   const getMessageViaSocket = () => {
     try {
