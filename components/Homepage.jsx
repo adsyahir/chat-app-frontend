@@ -13,7 +13,7 @@ export default function Homepage() {
           {/* Logo/Brand */}
           <div className="flex items-center space-x-2">
             <MessageCircle className="h-12 w-12 text-primary" />
-            <h1 className="text-4xl font-bold text-foreground">KitaBual</h1>
+            <h1 className="text-4xl font-bold text-foreground">Borak</h1>
           </div>
 
           {/* Tagline */}
@@ -45,7 +45,7 @@ export default function Homepage() {
         {/* Features Section */}
         <div className="mt-24">
           <h3 className="text-2xl font-bold text-center text-foreground mb-12">
-            Why choose KitaBual?
+            Why choose Borak?
           </h3>
           <div className="grid md:grid-cols-3 gap-8">
             <Card className="text-center">
@@ -94,7 +94,7 @@ export default function Homepage() {
                 Ready to start chatting?
               </h3>
               <p className="text-muted-foreground mb-6">
-                Join thousands of users who trust KitaBual for their daily communications
+                Join thousands of users who trust Borak for their daily communications
               </p>
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
                 <Link href="/signup">

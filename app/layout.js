@@ -15,7 +15,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata = {
-  title: "KitaBual - Real-time Chat Application",
+  title: "Borak - Real-time Chat Application",
   description: "A modern, secure chat application that brings people together.",
 };
 

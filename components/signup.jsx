@@ -141,7 +141,7 @@ export default function SignUp() {
       }
 
       // Success
-      toast.success("Account created successfully! Welcome to Chatter.");
+      toast.success("Account created successfully! Welcome to Borak.");
       resetForm();
       router.push("/"); // Redirect to dashboard or login
       
@@ -162,7 +162,7 @@ export default function SignUp() {
             <div className="flex items-center justify-center w-12 h-12 bg-primary/10 rounded-full">
               <GalleryVerticalEnd className="size-6 text-primary" />
             </div>
-            <h1 className="text-2xl font-bold text-center">Join Chatter</h1>
+            <h1 className="text-2xl font-bold text-center">Join Borak</h1>
             <p className="text-sm text-muted-foreground text-center">
               Create your account to get started
             </p>
