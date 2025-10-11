@@ -31,15 +31,20 @@ export default function Login() {
   
   const handleLogin = async (e) => {
     e.preventDefault();
-  
+
     try {
       const data = await authAPI.login(email, password);
-      
+
       setUser(data.user);
       setIsAuthenticated(true);
       setIsLoading(false);
- 
-      socketAPI.connect(data.user.id);
+
+      // Connect socket after state is set
+      setTimeout(() => {
+        socketAPI.connect();
+      }, 100);
+
+      // Navigate to home
       router.push("/home");
     } catch (err) {
       setError(err);
