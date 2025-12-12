@@ -14,6 +14,8 @@ import AuthSync from "@/components/auth-sync";
 import { AppSidebar } from "@/components/app-sidebar";
 import ChatWrapper from "@/components/chat-wrapper";
 import OnlineUsersSync from "@/components/online-users-sync";
+import { VideoCallProvider } from "@/components/VideoCallProvider";
+
 export default async function AuthLayout({ children }) {
   const headersList = await headers();
   const userHeader = headersList.get("x-user");
@@ -41,11 +43,13 @@ export default async function AuthLayout({ children }) {
     items.push({ title: "Settings", url: "#", icon: Settings });
   }
   return (
-    <SidebarProvider>
-      <AppSidebar user={user}>{children}</AppSidebar>
-      <AuthSync isAuthenticated={isAuthenticated} user={user} />
-      <OnlineUsersSync />
-      <ChatWrapper />
-    </SidebarProvider>
+    <VideoCallProvider>
+      <SidebarProvider>
+        <AppSidebar user={user}>{children}</AppSidebar>
+        <AuthSync isAuthenticated={isAuthenticated} user={user} />
+        <OnlineUsersSync />
+        <ChatWrapper />
+      </SidebarProvider>
+    </VideoCallProvider>
   );
 }

@@ -107,11 +107,11 @@ export default function Contacts({ contacts = [] }) {
       chatStore.setSelectedContact(contact);
       console.log('selectedContact is',chatStore?.selectedContact);
 
-      router.push("/");
+      router.push("/home");
     } else {
       // Handle the case when chat store is not ready
       console.warn("Chat store not ready, redirecting without setting contact");
-      router.push("/");
+      router.push("/home");
     }
   };
 
