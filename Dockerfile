@@ -1,25 +1,57 @@
-FROM node:18-alpine
+# =============================================================================
+# CHAT APP FRONTEND — production image
+# =============================================================================
+# Builds a Next.js standalone bundle. The previous image ran `next dev` in
+# production: slow, unminified, and it exposed the dev overlay.
+
+FROM node:20-alpine AS deps
 
 WORKDIR /app
 
-# Copy package files and install dependencies
-COPY package*.json ./
+COPY package.json package-lock.json ./
 RUN npm ci
 
-# Copy source code
+# -----------------------------------------------------------------------------
+
+FROM node:20-alpine AS builder
+
+WORKDIR /app
+
+COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
-# Pass environment variables as build args
+# NEXT_PUBLIC_* values are inlined at build time, so they must be build args.
 ARG NEXT_PUBLIC_BACKEND_URL
-ARG INTERNAL_BACKEND_URL
 ENV NEXT_PUBLIC_BACKEND_URL=$NEXT_PUBLIC_BACKEND_URL
-ENV INTERNAL_BACKEND_URL=$INTERNAL_BACKEND_URL
+ENV NEXT_TELEMETRY_DISABLED=1
 
-# Enable polling for file watching in containers
-ENV CHOKIDAR_USEPOLLING=true
+RUN npm run build
 
-# Expose port
+# -----------------------------------------------------------------------------
+
+FROM node:20-alpine AS runtime
+
+ENV NODE_ENV=production \
+    PORT=3000 \
+    HOSTNAME=0.0.0.0 \
+    NEXT_TELEMETRY_DISABLED=1
+
+RUN apk add --no-cache tini
+
+WORKDIR /app
+
+# `output: "standalone"` emits a self-contained server with only the modules it
+# actually imports.
+COPY --from=builder --chown=node:node /app/.next/standalone ./
+COPY --from=builder --chown=node:node /app/.next/static ./.next/static
+COPY --from=builder --chown=node:node /app/public ./public
+
+USER node
+
 EXPOSE 3000
 
-# Start in development mode for live reload
-CMD ["npm", "run", "dev"]
+HEALTHCHECK --interval=30s --timeout=3s --start-period=25s --retries=3 \
+  CMD node -e "fetch('http://127.0.0.1:3000/login').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"
+
+ENTRYPOINT ["/sbin/tini", "--"]
+CMD ["node", "server.js"]
