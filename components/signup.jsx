@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { AlertCircleIcon, Eye, EyeOff, GalleryVerticalEnd, Loader2 } from "lucide-react";
+import { authAPI } from "@/lib/api";
 
 export default function SignUp() {
   const [formData, setFormData] = useState({
@@ -115,38 +116,35 @@ export default function SignUp() {
     setIsLoading(true);
 
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/auth/signup`, {
-        method: "POST",
-        credentials: "include",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          email: formData.email.value,
-          username: formData.username.value,
-          password: formData.password.value,
-        }),
+      // Goes through the shared API layer so the backend URL is built in one
+      // place; the inline fetch produced "undefined/api/..." whenever
+      // NEXT_PUBLIC_BACKEND_URL was unset.
+      await authAPI.signup({
+        email: formData.email.value,
+        username: formData.username.value,
+        password: formData.password.value,
       });
 
-      const data = await response.json();
+      toast.success("Account created successfully! Welcome to Borak.");
+      resetForm();
+      // Signup does not create a session, so send them to the login form.
+      router.push("/login");
+    } catch (err) {
+      console.error("Signup error:", err);
 
-      if (!response.ok) {
-        // Handle server validation errors
-        if (data.errors) {
-          Object.entries(data.errors).forEach(([field, error]) => {
+      // A rejected signup carries the server's field errors; anything else
+      // never reached the server.
+      if (err?.isApiError) {
+        if (err.errors) {
+          Object.entries(err.errors).forEach(([field, error]) => {
             setFieldError(field, error);
           });
         } else {
-          setGeneralError(data.message || "Registration failed. Please try again.");
+          setGeneralError(err.message || "Registration failed. Please try again.");
         }
         return;
       }
 
-      // Success
-      toast.success("Account created successfully! Welcome to Borak.");
-      resetForm();
-      router.push("/"); // Redirect to dashboard or login
-      
-    } catch (err) {
-      console.error("Signup error:", err);
       setGeneralError("Network error. Please check your connection and try again.");
     } finally {
       setIsLoading(false);
