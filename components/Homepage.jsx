@@ -29,16 +29,12 @@ export default function Homepage() {
 
           {/* CTA Buttons */}
           <div className="flex flex-col sm:flex-row gap-4 mt-8">
-            <Link href="/signup">
-              <Button size="lg" className="w-full sm:w-auto min-w-32">
-                Get Started
-              </Button>
-            </Link>
-            <Link href="/login">
-              <Button variant="outline" size="lg" className="w-full sm:w-auto min-w-32">
-                Sign In
-              </Button>
-            </Link>
+            <Button size="lg" asChild className="w-full sm:w-auto min-w-32">
+              <Link href="/signup">Get Started</Link>
+            </Button>
+            <Button variant="outline" size="lg" asChild className="w-full sm:w-auto min-w-32">
+              <Link href="/login">Sign In</Link>
+            </Button>
           </div>
         </div>
 
@@ -97,16 +93,12 @@ export default function Homepage() {
                 Join thousands of users who trust Borak for their daily communications
               </p>
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                <Link href="/signup">
-                  <Button size="lg" className="w-full sm:w-auto">
-                    Create Account
-                  </Button>
-                </Link>
-                <Link href="/login">
-                  <Button variant="ghost" size="lg" className="w-full sm:w-auto">
-                    Already have an account?
-                  </Button>
-                </Link>
+                <Button size="lg" asChild className="w-full sm:w-auto">
+                  <Link href="/signup">Create Account</Link>
+                </Button>
+                <Button variant="ghost" size="lg" asChild className="w-full sm:w-auto">
+                  <Link href="/login">Already have an account?</Link>
+                </Button>
               </div>
             </CardContent>
           </Card>

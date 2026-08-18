@@ -29,41 +29,51 @@ export default function NavMenu({ items }) {
       <SidebarGroup>
         <SidebarGroupContent className="px-1.5 md:px-0">
           <SidebarMenu>
-            {items.map((item) => (
-              <DropdownMenu key={item.title}>
-                <SidebarMenuItem>
-                  <DropdownMenuTrigger asChild>
-                    <Link href={item.url ? item.url : "#"}>
+            {items.map((item) =>
+              // With sub-items: the trigger IS the button. Wrapping it in a
+              // Link put a <button> inside an <a>, which is invalid nesting —
+              // the browser restructures that markup before React hydrates,
+              // so the ids Radix generated on the server never matched.
+              item.items?.length ? (
+                <SidebarMenuItem key={item.title}>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
                       <SidebarMenuButton
-                        tooltip={{
-                          children: item.title,
-                          hidden: false,
-                        }}
+                        tooltip={{ children: item.title, hidden: false }}
                         className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
                       >
                         <item.icon />
                         <MoreHorizontal className="ml-auto" />
                       </SidebarMenuButton>
-                    </Link>
-                  </DropdownMenuTrigger>
-                  {item.items?.length ? (
+                    </DropdownMenuTrigger>
                     <DropdownMenuContent
-                      side={"right"}
-                      align={"start"}
-                      //   side={isMobile ? "bottom" : "right"}
-                      //   align={isMobile ? "end" : "start"}
+                      side="right"
+                      align="start"
                       className="min-w-56 rounded-lg"
                     >
-                      {item.items.map((item) => (
-                        <DropdownMenuItem asChild key={item.title}>
-                          <Link href={item.url}>{item.title}</Link>
+                      {item.items.map((subItem) => (
+                        <DropdownMenuItem asChild key={subItem.title}>
+                          <Link href={subItem.url}>{subItem.title}</Link>
                         </DropdownMenuItem>
                       ))}
                     </DropdownMenuContent>
-                  ) : null}
+                  </DropdownMenu>
                 </SidebarMenuItem>
-              </DropdownMenu>
-            ))}
+              ) : (
+                // Without sub-items there is no menu to open, so render a plain
+                // link instead of an empty dropdown.
+                <SidebarMenuItem key={item.title}>
+                  <SidebarMenuButton
+                    asChild
+                    tooltip={{ children: item.title, hidden: false }}
+                  >
+                    <Link href={item.url ? item.url : "#"}>
+                      <item.icon />
+                    </Link>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              )
+            )}
           </SidebarMenu>
         </SidebarGroupContent>
       </SidebarGroup>

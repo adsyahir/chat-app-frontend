@@ -1,39 +1,19 @@
-"use-client";
-import * as React from "react";
-import {
-  ArchiveX,
-  Command,
-  File,
-  Home,
-  MessageCircle,
-  Send,
-  UserRound,
-} from "lucide-react";
+"use client";
+import { Home, MessageCircle, UserRound } from "lucide-react";
 
 import { NavUser } from "@/components/nav-user";
 import {
   Sidebar,
-  SidebarContent,
   SidebarFooter,
-  SidebarGroup,
-  SidebarGroupContent,
   SidebarHeader,
-  SidebarInput,
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
-  useSidebar,
 } from "@/components/ui/sidebar";
-import { Switch } from "@/components/ui/switch";
 import Link from "next/link";
 import NavMenu from "./nav-menu";
 
 const data = {
-  user: {
-    name: "shadcn",
-    email: "m@example.com",
-    avatar: "/avatars/shadcn.jpg",
-  },
   navMain: [
     {
       title: "Home",
@@ -42,18 +22,6 @@ const data = {
       isActive: true,
     },
 
-    {
-      title: "Drafts",
-      url: "#",
-      icon: File,
-      isActive: false,
-    },
-    {
-      title: "Sent",
-      url: "#",
-      icon: Send,
-      isActive: false,
-    },
     {
       title: "People",
       url: "/people",
