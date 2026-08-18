@@ -26,7 +26,7 @@ import {
   Users,
 } from "lucide-react";
 import { useChatStore, useAuthStore } from "@/lib/stores";
-import { friendsAPI } from "@/lib/api";
+import { friendsAPI, socketAPI } from "@/lib/api";
 import { set } from "zod";
 
 export default function HomePage() {
@@ -90,6 +90,25 @@ export default function HomePage() {
     setFirstContactAfterMessage();
   }, [chatStore?._hasHydrated, chatStore?.selectedContact]);
 
+  // A message from someone you have not chatted with before has to appear in
+  // this list straight away; without it the recipient saw "No chatted friends
+  // yet" until they reloaded the page.
+  useEffect(() => {
+    if (!chatStore?._hasHydrated || !userId) return;
+
+    socketAPI.connect();
+
+    const handler = () => {
+      displayExisitingChattedFriends();
+    };
+
+    socketAPI.on("newMessage", handler);
+
+    return () => {
+      socketAPI.off("newMessage", handler);
+    };
+  }, [chatStore?._hasHydrated, userId]);
+
   const setFirstContactAfterMessage = () => {
     if (chattedFriends.length > 0 && !chatStore.selectedContact) {
       chatStore.setSelectedContact({
@@ -124,9 +143,6 @@ export default function HomePage() {
             <div>
               <div className="text-black dark:text-white text-lg font-semibold">
                 Home
-              </div>
-              <div className="text-sm text-gray-600 dark:text-gray-400">
-                User ID: {userId}
               </div>
             </div>
           </div>

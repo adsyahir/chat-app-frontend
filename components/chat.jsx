@@ -6,12 +6,12 @@ import { Separator } from "@/components/ui/separator";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { useState, useEffect, useRef } from "react";
-import { chatAPI, socketAPI, userAPI, friendsAPI } from "@/lib/api";
+import { chatAPI, socketAPI, friendsAPI } from "@/lib/api";
 import { useEncryptionStore } from "@/lib/stores/encryptionStore";
 import { encryptMessage, decryptMessage } from "@/lib/crypto/encryption";
 import { useVideoCallStore } from "@/lib/stores/videoCallStore";
 import { useAuthStore } from "@/lib/stores/authStore";
-import { Video, TestTube2 } from "lucide-react";
+import { Video, TestTube2, MessagesSquare } from "lucide-react";
 import { CameraTest } from "@/components/CameraTest";
 
 export default function Chat() {
@@ -166,16 +166,38 @@ export default function Chat() {
   }, [chatStoreResult?.selectedContact, chatStoreResult?._hasHydrated]);
 
   useEffect(() => {
-    if (chatStoreResult?._hasHydrated && userId) {
-      // Ensure socket connection is established
-      socketAPI.connect();
-      getMessageViaSocket();
-    }
-    // Cleanup function to remove socket listener
-    return () => {
-      socketAPI.off("newMessage");
+    if (!chatStoreResult?._hasHydrated || !userId) return;
+
+    socketAPI.connect();
+
+    const handler = (message) => {
+      const openContactId =
+        chatStoreResult?.selectedContact?.friendId ??
+        chatStoreResult?.selectedContact?._id;
+
+      // Only append when the message belongs to the conversation on screen.
+      // Previously any friend's message pulled their profile and replaced
+      // selectedContact, yanking the user out of the chat they were reading.
+      if (message.senderId === openContactId) {
+        setChatMessages((prevMessages) => [...prevMessages, message]);
+        return;
+      }
+
+      // From someone else: count it as unread, leave the open chat alone.
+      chatStoreResult?.incrementUnread?.(message.senderId);
     };
-  }, [chatStoreResult?._hasHydrated, userId]);
+
+    socketAPI.on("newMessage", handler);
+
+    // Detach only this handler, so other components keep theirs.
+    return () => {
+      socketAPI.off("newMessage", handler);
+    };
+  }, [
+    chatStoreResult?._hasHydrated,
+    userId,
+    chatStoreResult?.selectedContact?.friendId,
+  ]);
 
   useEffect(() => {
     scrollToBottom();
@@ -208,19 +230,6 @@ export default function Chat() {
     }
   };
 
-  const getUserById = async (id) => {
-    try {
-      const result = await userAPI.getUserById(id);
-      chatStoreResult.setSelectedContact({
-        ...result,
-        friendId: result._id,
-      });
-      getMessages(id);
-    } catch (error) {
-      console.error("Error fetching user data:", error);
-    }
-  };
-
   const getExistingChattedFriends =  async () => {
     try{
       const result = await friendsAPI.getExistingChattedFriends();
@@ -230,27 +239,34 @@ export default function Chat() {
     }
   }
 
-  const getMessageViaSocket = () => {
-    try {
-      // Remove existing listener first to prevent duplicates
-      socketAPI.off("newMessage");
+  // Nothing is selected yet: show a placeholder instead of a chat header for a
+  // contact that does not exist ("Unknown User", "Type a message to undefined").
+  if (!contact) {
+    return (
+      <SidebarInset className="flex flex-col h-screen">
+        <header className="bg-background sticky top-0 z-10 flex items-center gap-2 border-b p-4">
+          <SidebarTrigger className="-ml-1" />
+          <Separator
+            orientation="vertical"
+            className="mr-2 data-[orientation=vertical]:h-4"
+          />
+          <h1 className="text-lg font-semibold">Messages</h1>
+        </header>
 
-      // Listen for new messages
-      socketAPI.on("newMessage", (message) => {
-        if (message.senderId !== userId) {
-          setChatMessages((prevMessages) => [...prevMessages, message]);
-        }
-        if (
-          message.senderId &&
-          chatStoreResult?.selectedContact?._id !== message.senderId
-        ) {
-          getUserById(message.senderId);
-        }
-      });
-    } catch (error) {
-      console.error("Error setting up message listener:", error);
-    }
-  };
+        <div className="flex flex-1 items-center justify-center p-8">
+          <div className="text-center">
+            <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-muted">
+              <MessagesSquare className="h-7 w-7 text-muted-foreground" />
+            </div>
+            <h2 className="text-lg font-semibold">No conversation selected</h2>
+            <p className="mt-1 text-sm text-muted-foreground">
+              Pick someone from the sidebar to start chatting.
+            </p>
+          </div>
+        </div>
+      </SidebarInset>
+    );
+  }
 
   return (
     <SidebarInset className="flex flex-col h-screen">
@@ -262,7 +278,7 @@ export default function Chat() {
         />
         <div className="flex-1">
           <h1 className="text-lg font-semibold">
-            {chatStoreResult.selectedContact?.username ?? "Unknown User"}
+            {contact.username}
           </h1>
           <div className="flex items-center gap-4 text-sm text-gray-600 dark:text-gray-400">
             <span>
@@ -320,7 +336,7 @@ export default function Chat() {
 
             return (
               <div
-                key={i}
+                key={msg._id || i}
                 className={`max-w-xs px-4 py-2 rounded-lg ${
                   msg.senderId === userId
                     ? "ml-auto bg-black text-white"
@@ -346,7 +362,7 @@ export default function Chat() {
       <div className="border-t p-4 bg-background">
         <form onSubmit={sendMessage} className="flex items-center gap-2">
           <Textarea
-            placeholder={`Type a message to ${contact?.username}...`}
+            placeholder={`Type a message to ${contact.username}...`}
             className="flex-1 resize-none"
             rows={2}
             value={message}
